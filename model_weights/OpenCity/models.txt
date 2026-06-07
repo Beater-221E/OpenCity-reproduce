@@ -1,0 +1,9 @@
+
+OpenCity-plus.pth 
+https://huggingface.co/hkuds/OpenCity-Plus/resolve/main/OpenCity-plus.pth
+
+OpenCity-base.pth 
+https://huggingface.co/hkuds/OpenCity-Base/resolve/main/OpenCity-base.pth
+
+OpenCity-mini.pth 
+https://huggingface.co/hkuds/OpenCity-Mini/resolve/main/OpenCity-mini.pth
