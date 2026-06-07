@@ -1,0 +1,55 @@
+# 精简配置：磁盘仅 CD_DIDI / SZ_DIDI；其余实验指标见 results/*.csv
+variants:
+  mini:
+    ckpt: OpenCity-mini.pth
+    embed_dim: 128
+    skip_dim: 128
+    enc_depth: 3
+    batch_size: 8
+  base:
+    ckpt: OpenCity-base.pth
+    embed_dim: 256
+    skip_dim: 256
+    enc_depth: 3
+    batch_size: 8
+  plus:
+    ckpt: OpenCity-plus.pth
+    embed_dim: 512
+    skip_dim: 512
+    enc_depth: 6
+    batch_size: 2
+
+local_datasets: [CD_DIDI, SZ_DIDI]
+
+table1_datasets: [CAD3, CAD5, PEMS07M, TrafficSH, CHI_TAXI, NYC_BIKE-3]
+table2_supervised_datasets: [CAD8-1, CAD8-2, CAD12-2, PEMS_BAY, NYC_TAXI]
+scaling:
+  datasets: [PEMS07M, METR_LA, PEMS_BAY, CAD3, PEMS04, NYC_TAXI]
+  variants: [mini, base, plus]
+fast_adapt:
+  datasets: [CD_DIDI, SZ_DIDI]
+  variants: [mini, base, plus]
+  finetune_epochs: 3
+
+ablation:
+  datasets: [CAD3, NYC_BIKE-3]
+  variants: [full, minus_DTP, minus_PTTM, minus_SDM, minus_STC]
+
+paper_table1:
+  CAD3: {mae: 15.88, rmse: 27.03, mape: 21.94}
+  CAD5: {mae: 11.09, rmse: 18.96, mape: 27.90}
+  PEMS07M: {mae: 4.50, rmse: 8.21, mape: 12.20}
+  TrafficSH: {mae: 0.55, rmse: 0.85, mape: 8.01}
+  CHI_TAXI: {mae: 1.91, rmse: 4.42, mape: 40.07}
+  NYC_BIKE-3: {mae: 6.32, rmse: 11.60, mape: 70.06}
+
+paper_table2_opencity_plus:
+  CAD8-1: {mae: 22.50}
+  CAD8-2: {mae: 17.95}
+  CAD12-2: {mae: 24.20}
+  PEMS_BAY: {mae: 2.59}
+  NYC_TAXI: {mae: 3.10}
+
+paper_table3_plus:
+  CD_DIDI: {zeroshot: 6.03, finetune: 2.97}
+  SZ_DIDI: {zeroshot: 3.68, finetune: 2.36}

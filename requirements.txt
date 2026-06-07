@@ -4,3 +4,5 @@ pandas
 scipy
 tqdm
 tslearn
+pyyaml
+huggingface_hub

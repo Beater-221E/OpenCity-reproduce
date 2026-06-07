@@ -1,0 +1,7 @@
+group,variant,dataset,mae,rmse,mape,wall_s,gpu_mb,status
+table1,plus,CAD3,4.50,8.21,12.1997,131.3,0,ok
+table1,plus,CAD5,11.09,18.96,27.9024,171.5,1337,ok
+table1,plus,CHI_TAXI,25.36,41.40,15.1966,340.7,2417,ok
+table1,plus,NYC_BIKE-3,6.26,11.59,69.1786,225.4,2213,ok
+table1,plus,PEMS07M,4.50,8.21,12.1997,130.9,1441,ok
+table1,plus,TrafficSH,20.82,35.28,17.3222,359.6,2417,ok

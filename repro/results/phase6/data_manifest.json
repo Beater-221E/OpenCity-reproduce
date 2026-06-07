@@ -1,0 +1,137 @@
+{
+  "table1_required": [
+    "CAD3",
+    "CAD5",
+    "PEMS07M",
+    "TrafficSH",
+    "CHI_TAXI",
+    "NYC_BIKE-3"
+  ],
+  "datasets": {
+    ".cache": {
+      "exists": false,
+      "path": "/home/OpenCity/data/.cache/.cache.npz"
+    },
+    "CAD12-1": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CAD12-1/CAD12-1.npz"
+    },
+    "CAD12-2": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CAD12-2/CAD12-2.npz"
+    },
+    "CAD3": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CAD3/CAD3.npz"
+    },
+    "CAD4-1": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CAD4-1/CAD4-1.npz"
+    },
+    "CAD4-2": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CAD4-2/CAD4-2.npz"
+    },
+    "CAD4-3": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CAD4-3/CAD4-3.npz"
+    },
+    "CAD4-4": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CAD4-4/CAD4-4.npz"
+    },
+    "CAD5": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CAD5/CAD5.npz"
+    },
+    "CAD7-1": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CAD7-1/CAD7-1.npz"
+    },
+    "CAD7-2": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CAD7-2/CAD7-2.npz"
+    },
+    "CAD7-3": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CAD7-3/CAD7-3.npz"
+    },
+    "CAD8-1": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CAD8-1/CAD8-1.npz"
+    },
+    "CAD8-2": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CAD8-2/CAD8-2.npz"
+    },
+    "CD_DIDI": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CD_DIDI/CD_DIDI.npz"
+    },
+    "CHI_TAXI": {
+      "exists": true,
+      "path": "/home/OpenCity/data/CHI_TAXI/CHI_TAXI.npz"
+    },
+    "METR_LA": {
+      "exists": true,
+      "path": "/home/OpenCity/data/METR_LA/METR_LA.npz"
+    },
+    "NYC_BIKE-3": {
+      "exists": true,
+      "path": "/home/OpenCity/data/NYC_BIKE-3/NYC_BIKE-3.npz"
+    },
+    "NYC_TAXI": {
+      "exists": true,
+      "path": "/home/OpenCity/data/NYC_TAXI/NYC_TAXI.npz"
+    },
+    "OpenCity": {
+      "exists": false,
+      "path": "/home/OpenCity/data/OpenCity/OpenCity.npz"
+    },
+    "PDFormer": {
+      "exists": false,
+      "path": "/home/OpenCity/data/PDFormer/PDFormer.npz"
+    },
+    "PEMS04": {
+      "exists": true,
+      "path": "/home/OpenCity/data/PEMS04/PEMS04.npz"
+    },
+    "PEMS07M": {
+      "exists": true,
+      "path": "/home/OpenCity/data/PEMS07M/PEMS07M.npz"
+    },
+    "PEMS08": {
+      "exists": true,
+      "path": "/home/OpenCity/data/PEMS08/PEMS08.npz"
+    },
+    "PEMS_BAY": {
+      "exists": true,
+      "path": "/home/OpenCity/data/PEMS_BAY/PEMS_BAY.npz"
+    },
+    "SZ_DIDI": {
+      "exists": true,
+      "path": "/home/OpenCity/data/SZ_DIDI/SZ_DIDI.npz"
+    },
+    "TrafficCD": {
+      "exists": true,
+      "path": "/home/OpenCity/data/TrafficCD/TrafficCD.npz"
+    },
+    "TrafficHZ": {
+      "exists": true,
+      "path": "/home/OpenCity/data/TrafficHZ/TrafficHZ.npz"
+    },
+    "TrafficJN": {
+      "exists": true,
+      "path": "/home/OpenCity/data/TrafficJN/TrafficJN.npz"
+    },
+    "TrafficSH": {
+      "exists": true,
+      "path": "/home/OpenCity/data/TrafficSH/TrafficSH.npz"
+    },
+    "TrafficZZ": {
+      "exists": true,
+      "path": "/home/OpenCity/data/TrafficZZ/TrafficZZ.npz"
+    }
+  },
+  "table1_ready": true
+}

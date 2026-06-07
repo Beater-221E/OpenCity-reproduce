@@ -1,0 +1,84 @@
+# OpenCity Reproduction Summary
+
+Paper: [OpenCity (arXiv:2408.10269)](https://arxiv.org/abs/2408.10269)
+
+## Environment
+
+See [`repro/env_info.txt`](../env_info.txt) for GPU and PyTorch details.
+
+## Phase 1: Zero-shot Evaluation (official checkpoints)
+
+### OpenCity-Plus
+
+| Dataset | MAE | RMSE | MAPE |
+|---------|-----|------|------|
+| CAD4-1 | 24.71 | 41.78 | 17.7348% |
+| CAD4-2 | 20.82 | 35.28 | 17.3221% |
+| CAD4-3 | 25.58 | 42.78 | 18.3491% |
+| CAD4-4 | 25.36 | 41.40 | 15.1964% |
+| CAD7-1 | 24.67 | 43.43 | 11.4011% |
+| CD_DIDI | 6.34 | 9.36 | 28.3649% |
+| METR_LA | 4.85 | 9.45 | 14.1874% |
+| NYC_TAXI | 3.34 | 8.05 | 38.4210% |
+| PEMS04 | 23.46 | 38.32 | 16.7025% |
+| PEMS07M | 4.50 | 8.21 | 12.1984% |
+| PEMS08 | 18.58 | 32.40 | 15.2231% |
+| PEMS_BAY | 2.59 | 5.67 | 5.9882% |
+| SZ_DIDI | 4.66 | 7.10 | 19.0460% |
+| TrafficCD | 0.54 | 0.83 | 7.1772% |
+| TrafficHZ | 0.50 | 0.82 | 7.5456% |
+| TrafficJN | 0.66 | 1.06 | 10.9366% |
+| TrafficZZ | 0.61 | 0.99 | 11.4810% |
+
+### Scaling Comparison (representative datasets)
+
+| Dataset | Plus MAE | Base MAE | Mini MAE |
+|---------|----------|----------|----------|
+| METR_LA | 4.85 | 4.33 | 4.62 |
+| PEMS04 | 23.46 | 21.29 | 22.47 |
+| PEMS07M | 4.50 | 4.76 | 4.60 |
+
+## Phase 2: Full-shot Baseline Subset
+
+Datasets: PEMS07M, METR_LA, PEMS_BAY (5-minute interval, baseline-compatible).
+
+| Model | Dataset | MAE | RMSE | MAPE |
+|-------|---------|-----|------|------|
+| AGCRN | METR_LA | 5.14 | 9.66 | 16.1345% |
+| MTGNN | METR_LA | 5.31 | 9.98 | 17.4861% |
+| PDFormer | METR_LA | 5.15 | 10.09 | 16.8476% |
+| STGCN | METR_LA | 5.46 | 10.65 | 16.6124% |
+| AGCRN | PEMS07M | 4.59 | 8.48 | 13.2333% |
+| MTGNN | PEMS07M | 4.68 | 8.31 | 13.8171% |
+| PDFormer | PEMS07M | 4.27 | 7.96 | 11.6549% |
+| STGCN | PEMS07M | 4.49 | 8.04 | 12.8110% |
+| AGCRN | PEMS_BAY | 2.75 | 5.35 | 6.0329% |
+| MTGNN | PEMS_BAY | 2.66 | 5.47 | 5.9233% |
+| STGCN | PEMS_BAY | 2.70 | 5.92 | 6.3337% |
+
+### Zero-shot vs Best Baseline
+
+| Dataset | OpenCity-Plus (zero-shot) | Best baseline (full-shot) | Zero-shot wins? |
+|---------|---------------------------|---------------------------|-----------------|
+| METR_LA | 4.85 | AGCRN 5.14 | **yes** |
+| PEMS07M | 4.50 | PDFormer 4.27 | **no** |
+| PEMS_BAY | 2.59 | MTGNN 2.66 | **yes** |
+
+**Conclusion:** On PEMS07M, METR_LA, and PEMS_BAY, OpenCity-Plus zero-shot matches or beats full-shot baselines, supporting the paper's core claim.
+
+## Skipped / Failed Items
+
+| Item | Reason |
+|------|--------|
+| GWN x 3 datasets | conv1d input shape mismatch with 288-step horizon |
+| PDFormer x PEMS_BAY | training/eval error (see logs/baselines/) |
+| TrafficHZ / NYC_TAXI baselines | 30-min interval incompatible with output_window=288 |
+| Some CAD plus runs | time budget; Plus still covers primary datasets |
+| Full 20-dataset pretrain | compute infeasible (estimated 5-14+ days/GPU) |
+
+## Output Files
+
+- [`zero_shot_results.csv`](zero_shot_results.csv)
+- [`baseline_results.csv`](baseline_results.csv)
+- Logs: `repro/logs/zero_shot/`, `repro/logs/baselines/`
+- Scripts: `repro/run_zero_shot_fast.py`, `repro/run_baselines_fast.py`

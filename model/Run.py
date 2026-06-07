@@ -114,41 +114,81 @@ elif args.loss_func == 'mse':
     loss = torch.nn.MSELoss()
 else:
     raise ValueError
-optimizer = torch.optim.Adam(params=model.parameters(), lr=args.lr_init, eps=1.0e-8, weight_decay=0, amsgrad=False)
-
-#learning rate decay
-if args.lr_decay:
-    print('Applying learning rate decay.')
-    lr_decay_steps = [int(i) for i in list(args.lr_decay_step.split(','))]
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer=optimizer,
-                                                        milestones=lr_decay_steps,
-                                                        gamma=args.lr_decay_rate)
-else:
-    scheduler = None
 
 
-#start training
-trainer = Trainer(model, loss, optimizer, train_dataloader, val_dataloader, test_dataloader, scaler_dict, args, scheduler=scheduler)
+def load_checkpoint(m, ckpt_path):
+    if torch.cuda.device_count() > 1:
+        m.load_state_dict(torch.load(ckpt_path, map_location=args.device))
+    else:
+        model_weights = {k.replace('module.', ''): v for k, v in torch.load(ckpt_path, map_location=args.device).items()}
+        m.load_state_dict(model_weights)
+
+
+def get_predictor(m):
+    if hasattr(m, 'module'):
+        return m.module.predictor
+    return m.predictor
+
+
+def make_optimizer(trainable_only=False):
+    params = filter(lambda p: p.requires_grad, model.parameters()) if trainable_only else model.parameters()
+    return torch.optim.Adam(params=params, lr=args.lr_init, eps=1.0e-8, weight_decay=0, amsgrad=False)
+
+
+def make_scheduler(optimizer):
+    if args.lr_decay:
+        print('Applying learning rate decay.')
+        lr_decay_steps = [int(i) for i in list(args.lr_decay_step.split(','))]
+        return torch.optim.lr_scheduler.MultiStepLR(
+            optimizer=optimizer, milestones=lr_decay_steps, gamma=args.lr_decay_rate)
+    return None
+
+
+ckpt_path = log_dir + '/' + args.load_pretrain_path
+
 if args.mode == 'pretrain' or args.mode == 'ori':
+    optimizer = make_optimizer(trainable_only=False)
+    scheduler = make_scheduler(optimizer)
+    trainer = Trainer(model, loss, optimizer, train_dataloader, val_dataloader, test_dataloader, scaler_dict, args, scheduler=scheduler)
     print_model_parameters(model, only_num=False)
     trainer.multi_train()
 elif args.mode == 'eval':
-    path = log_dir + '/' + args.load_pretrain_path
-    if torch.cuda.device_count() > 1:
-        model.load_state_dict(torch.load(path))
-    else:
-        model_weights = {k.replace('module.', ''): v for k, v in torch.load(path).items()}
-        model.load_state_dict(model_weights)
+    load_checkpoint(model, ckpt_path)
     print("Load saved model")
     for param in model.parameters():
         param.requires_grad = False
-    for param in model.predictor.linear.parameters():
+    for param in get_predictor(model).linear.parameters():
         param.requires_grad = True
+    optimizer = make_optimizer(trainable_only=True)
+    scheduler = make_scheduler(optimizer)
+    trainer = Trainer(model, loss, optimizer, train_dataloader, val_dataloader, test_dataloader, scaler_dict, args, scheduler=scheduler)
+    print_model_parameters(model, only_num=False)
+    trainer.multi_train()
+elif args.mode == 'lora_eval':
+    sys.path.insert(0, parent_dir)
+    from repro.lora.apply_lora import apply_lora_to_opencity, freeze_non_lora, trainable_param_count
+
+    load_checkpoint(model, ckpt_path)
+    print("Load saved model for LoRA fine-tuning")
+    rank = int(getattr(args, 'lora_rank', 8))
+    alpha = getattr(args, 'lora_alpha', None)
+    if alpha is not None and alpha <= 0:
+        alpha = None
+    n_layers = apply_lora_to_opencity(get_predictor(model), rank=rank, alpha=alpha)
+    freeze_non_lora(model)
+    n_train = trainable_param_count(model)
+    print(f"LoRA rank={rank} alpha={alpha or 2*rank} replaced={n_layers} trainable_params={n_train}")
+    optimizer = make_optimizer(trainable_only=True)
+    scheduler = make_scheduler(optimizer)
+    trainer = Trainer(model, loss, optimizer, train_dataloader, val_dataloader, test_dataloader, scaler_dict, args, scheduler=scheduler)
     print_model_parameters(model, only_num=False)
     trainer.multi_train()
 elif args.mode == 'test':
+    optimizer = make_optimizer(trainable_only=False)
+    scheduler = make_scheduler(optimizer)
+    trainer = Trainer(model, loss, optimizer, train_dataloader, val_dataloader, test_dataloader, scaler_dict, args, scheduler=scheduler)
     print_model_parameters(model, only_num=False)
     print("Load saved model")
-    trainer.test(model, trainer.args, scaler_dict, test_dataloader, trainer.logger, path=log_dir + '/' + args.load_pretrain_path)
+    trainer.test(model, trainer.args, scaler_dict, test_dataloader, trainer.logger, path=ckpt_path)
 else:
-    raise ValueError
+    raise ValueError(f"Unknown mode: {args.mode}")

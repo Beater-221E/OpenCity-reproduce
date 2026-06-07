@@ -1,0 +1,6 @@
+group,variant,dataset,mae,rmse,mape,wall_s,gpu_mb,status
+table2_zs,plus,CAD12-2,22.89,37.98,29.6691,287.8,2673,ok
+table2_zs,plus,CAD8-1,21.19,35.28,13.8645,302.2,2579,ok
+table2_zs,plus,CAD8-2,17.42,28.87,10.3706,292.3,2625,ok
+table2_zs,plus,NYC_TAXI,3.34,8.05,38.4235,1067.1,1531,ok
+table2_zs,plus,PEMS_BAY,2.59,5.67,5.9884,415.8,0,ok

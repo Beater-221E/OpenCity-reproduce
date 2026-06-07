@@ -1,12 +1,32 @@
-import torch
 import os
+import sys
 import time
 import copy
+
 import numpy as np
+import torch
+from tqdm import tqdm
+
+from lib.data_process import get_key_from_value
 from lib.logger import get_logger
 from lib.metrics import All_Metrics
-from tqdm import tqdm
-from lib.data_process import get_key_from_value
+
+
+def _progress(it, total=None, desc="", leave=True, unit="batch"):
+    """tqdm wrapper: always on for eval/lora/pretrain when OPENCITY_TQDM=1 or stderr is a TTY."""
+    force = os.environ.get("OPENCITY_TQDM", "").strip() in ("1", "true", "yes")
+    if not force and not (hasattr(sys.stderr, "isatty") and sys.stderr.isatty()):
+        return it
+    return tqdm(
+        it,
+        total=total,
+        desc=desc,
+        leave=leave,
+        unit=unit,
+        file=sys.stderr,
+        dynamic_ncols=True,
+        mininterval=0.5,
+    )
 
 
 class Trainer(object):
@@ -39,11 +59,18 @@ class Trainer(object):
         # train_loss_list = []
         val_loss_list = []
 
-        for epoch in tqdm(range(self.args.epochs)):
-            # Train
-            # start_time = time.time()
-            train_epoch_loss = self.multi_train_eps()
-            # training_time = time.time() - start_time
+        mode = getattr(self.args, "mode", "train")
+        epoch_iter = _progress(
+            range(self.args.epochs),
+            total=self.args.epochs,
+            desc=f"{mode} epochs",
+            leave=True,
+            unit="epoch",
+        )
+        for epoch in epoch_iter:
+            train_epoch_loss = self.multi_train_eps(epoch)
+            if hasattr(epoch_iter, "set_postfix"):
+                epoch_iter.set_postfix(train_loss=f"{train_epoch_loss:.4f}")
 
             if train_epoch_loss > 1e6:
                 self.logger.warning('Gradient explosion detected. Ending...')
@@ -81,11 +108,19 @@ class Trainer(object):
         print("Pre-train finish.")
 
 
-    def multi_train_eps(self):
+    def multi_train_eps(self, epoch=0):
         self.model.train()
         total_loss = 0
         step = 0
-        for inputs, targets in self.train_dataloader:
+        n_batches = len(self.train_dataloader)
+        batch_iter = _progress(
+            self.train_dataloader,
+            total=n_batches,
+            desc=f"train ep{epoch + 1}",
+            leave=False,
+            unit="batch",
+        )
+        for inputs, targets in batch_iter:
             inputs, targets = inputs.squeeze(0).to(self.args.device), targets.squeeze(0).to(self.args.device)
             select_dataset = get_key_from_value(self.num_nodes_dict, inputs.shape[2])
             out = self.model(inputs, targets, select_dataset, batch_seen=None)
@@ -104,6 +139,8 @@ class Trainer(object):
                 self.scheduler.step()
             total_loss += loss.item()
             step += 1
+            if hasattr(batch_iter, "set_postfix"):
+                batch_iter.set_postfix(loss=f"{loss.item():.4f}", avg=f"{total_loss / step:.4f}")
             if step % self.args.log_step == 0:
                 current_lr = self.optimizer.param_groups[0]['lr']
                 self.logger.info(
@@ -120,7 +157,14 @@ class Trainer(object):
         self.model.eval()
         total_val_loss = 0
         with torch.no_grad():
-            for inputs, targets in self.val_dataloader:
+            val_iter = _progress(
+                self.val_dataloader,
+                total=len(self.val_dataloader),
+                desc=f"val ep{epoch + 1}",
+                leave=False,
+                unit="batch",
+            )
+            for inputs, targets in val_iter:
                 inputs, targets = inputs.squeeze(0).to(self.args.device), targets.squeeze(0).to(self.args.device)
                 select_dataset = get_key_from_value(self.num_nodes_dict, inputs.shape[2])
                 out = self.model(inputs, targets, select_dataset, batch_seen=None)
@@ -149,7 +193,14 @@ class Trainer(object):
             total_count = 0
             total_mape_count = 0
             total_batch = 0
-            for inputs, targets in test_dataloader:
+            test_iter = _progress(
+                test_dataloader,
+                total=len(test_dataloader),
+                desc="test",
+                leave=True,
+                unit="batch",
+            )
+            for inputs, targets in test_iter:
                 inputs, targets = inputs.squeeze(0).to(args.device), targets.squeeze(0).to(args.device)
                 select_dataset = get_key_from_value(args.num_nodes_dict, inputs.shape[2])
                 output = model(inputs, targets, select_dataset, batch_seen=None)

@@ -1,0 +1,23 @@
+{
+  "mode": "results_archive",
+  "description": "仅代码 + 归档结果；数据与权重按需下载",
+  "datasets_on_disk": [],
+  "datasets_download": {
+    "CD_DIDI": "hkuds/OpenCity-dataset — repro/phase7/download_assets.py",
+    "SZ_DIDI": "同上"
+  },
+  "datasets_in_results_only": [
+    "PEMS07M", "CAD3", "CAD5", "NYC_BIKE-3", "PEMS_BAY", "METR_LA", "PEMS04", "NYC_TAXI",
+    "CAD8-1", "CAD8-2", "CAD12-2", "TrafficSH", "CHI_TAXI"
+  ],
+  "weights": "hkuds/OpenCity-{Mini,Base,Plus} — repro/phase7/download_assets.py",
+  "primary_results": {
+    "table1": "repro/results/tables/paper_table1_opencity.md",
+    "table3_fast_adapt": "repro/results/tables/paper_table3_opencity.md",
+    "lora_vs_fast": "repro/results/tables/lora_vs_fast_adapt.md",
+    "scaling_csv": "repro/results/phase6/scaling_matrix.csv",
+    "lora_csv": "repro/results/phase7/lora_adapt_full.csv",
+    "fast_adapt_csv": "repro/results/phase6/fast_adapt_full.csv"
+  },
+  "note": "展示结论只需 repro/results/；重跑实验再 download_assets.py"
+}

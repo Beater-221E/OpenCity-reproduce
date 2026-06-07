@@ -79,8 +79,8 @@ def parse_args(parser, args_base):
         sh_mx_dict[dataset_select] = torch.FloatTensor(load_rel_2(A, args_predictor, dataset_select))
         lpls_dict[dataset_select] = torch.FloatTensor(cal_lape(copy.deepcopy(A)))
         d = np.sum(A, axis=1)
-        sinvD = np.sqrt(np.mat(np.diag(d)).I)
-        A_mx = np.mat(np.identity(A.shape[0]) + sinvD * A * sinvD)
+        sinvD = np.sqrt(np.asmatrix(np.diag(d)).I)
+        A_mx = np.asmatrix(np.identity(A.shape[0]) + sinvD * A * sinvD)
         adj_mx_dict[dataset_select] = torch.FloatTensor(copy.deepcopy(A_mx))
 
     args_predictor.adj_mx_dict = adj_mx_dict

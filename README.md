@@ -97,6 +97,13 @@ python Run.py -mode eval -model OpenCity \
   -load_pretrain_path OpenCity-plus.pth \
   -batch_size 2 -epochs 3 \
   --embed_dim 512 --skip_dim 512 --enc_depth 6
+
+# LoRA fine-tuning — freeze backbone, train low-rank adapters in encoder
+python Run.py -mode lora_eval -model OpenCity \
+  -load_pretrain_path OpenCity-plus.pth \
+  -batch_size 2 -epochs 3 \
+  --embed_dim 512 --skip_dim 512 --enc_depth 6 \
+  --lora_rank 8
 ```
 
 ---
@@ -114,7 +121,7 @@ python Run.py -mode eval -model OpenCity \
 | T6 | `ori` | Baseline full-shot (Table 1) |
 | T7 | `ori` | Supervised OpenCity (Table 2) |
 | T8 | `eval` | Linear-only fine-tuning (Table 3) |
-| LoRA | `lora` | Parameter-efficient fine-tuning extension |
+| LoRA | `lora_eval` | Parameter-efficient fine-tuning (`repro/lora/`) |
 
 **Plus model defaults:** `embed_dim=512`, `enc_depth=6`, `his=pred=288`, `batch_size=4`.
 
@@ -134,6 +141,9 @@ OpenCity/
 │   └── OpenCity/          # model implementation
 ├── model_weights/OpenCity/  # checkpoints (not in git)
 └── repro/                 # scripts, results, logs
+    ├── lora/              # LoRA implementation (no peft)
+    ├── phase6/            # zero-shot, scaling, fast adapt
+    ├── phase7/            # LoRA experiment queue
     ├── run_zero_shot_fast.py
     ├── run_baselines_fast.py
     ├── summarize_results.py
@@ -158,3 +168,23 @@ Config priority: CLI flags override `conf/OpenCity/OpenCity.conf`; `-` flags ove
 | `repro/run_all.sh` | Run full eval pipeline |
 
 Results: `repro/results/zero_shot_results.csv`, `baseline_results.csv`.
+
+### LoRA pipeline (phase6/7)
+
+Download data + weights, then run the full LoRA experiment queue:
+
+```bash
+python repro/phase7/download_assets.py
+bash repro/phase7/run_queue_dual.sh
+```
+
+Single-job LoRA (CD_DIDI, rank=8):
+
+```bash
+cd model
+set OPENCITY_DATASET_USE=CD_DIDI   # Linux/macOS: export OPENCITY_DATASET_USE=CD_DIDI
+python Run.py -mode lora_eval -model OpenCity -load_pretrain_path OpenCity-plus.pth \
+  -batch_size 2 -epochs 3 --embed_dim 512 --skip_dim 512 --enc_depth 6 --lora_rank 8
+```
+
+Archived results: `repro/results/phase7/lora_adapt_full.csv`, comparison table `repro/results/tables/lora_vs_fast_adapt.md`. See `repro/README_pipeline.md` for details.

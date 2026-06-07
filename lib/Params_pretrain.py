@@ -1,4 +1,5 @@
 import argparse
+import os
 # import numpy as np
 import configparser
 # import pandas as pd
@@ -25,7 +26,12 @@ def parse_args(device):
     # data
     dataset_use_str = config.get('data', 'dataset_use')
     dataset_use = eval(dataset_use_str)
+    env_ds = os.environ.get('OPENCITY_DATASET_USE', '').strip()
+    if env_ds:
+        dataset_use = [env_ds]
     args.add_argument('-dataset_use', default=dataset_use, type=list)
+    args.add_argument('--lora_rank', default=8, type=int)
+    args.add_argument('--lora_alpha', default=None, type=float)
     args.add_argument('-val_ratio', default=config['data']['val_ratio'], type=float)
     args.add_argument('-test_ratio', default=config['data']['test_ratio'], type=float)
     args.add_argument('-his', default=config['data']['his'], type=int)
