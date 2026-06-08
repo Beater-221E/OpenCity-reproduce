@@ -68,7 +68,10 @@ All `python Run.py` commands **must run from `model/`** (paths are relative to t
 Set one dataset with `OPENCITY_DATASET_USE`, e.g.:
 
 ```bash
+# Linux/macOS:
 export OPENCITY_DATASET_USE=PEMS07M
+# Windows cmd:
+set OPENCITY_DATASET_USE=PEMS07M
 bash repro/test_zeroshot.sh
 # Expected PEMS07M MAE ~ 4.50
 ```
@@ -85,7 +88,10 @@ Runs resumable zero-shot eval, baseline training, and writes CSV results to `rep
 
 ```bash
 cd model
+# Linux/macOS:
 export OPENCITY_DATASET_USE=PEMS07M
+# Windows cmd:
+set OPENCITY_DATASET_USE=PEMS07M
 
 # Zero-shot test (T5)
 python Run.py -mode test -model OpenCity \
@@ -190,7 +196,10 @@ Single-job LoRA (CD_DIDI, rank=8):
 
 ```bash
 cd model
+# Linux/macOS:
 export OPENCITY_DATASET_USE=CD_DIDI
+# Windows cmd:
+set OPENCITY_DATASET_USE=CD_DIDI
 python Run.py -mode lora_eval -model OpenCity -load_pretrain_path OpenCity-plus.pth \
   -batch_size 2 -epochs 3 --embed_dim 512 --skip_dim 512 --enc_depth 6 --lora_rank 8
 ```
