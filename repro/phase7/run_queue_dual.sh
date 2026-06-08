@@ -12,7 +12,7 @@ log() { echo "[$(date -Iseconds)] $*" | tee -a "$MAIN_LOG"; }
 log "========== phase7 LoRA queue START =========="
 python repro/phase7/download_assets.py 2>&1 | tee -a repro/logs/phase7_download.log | tee -a "$MAIN_LOG"
 
-PYTHON="${PYTHON:-/venv/main/bin/python}"
+PYTHON="${PYTHON:-python}"
 NGPU=$(nvidia-smi -L 2>/dev/null | wc -l)
 log "detected GPUs: $NGPU"
 

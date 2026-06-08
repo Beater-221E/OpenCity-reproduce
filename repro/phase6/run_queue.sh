@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd /home/OpenCity
+cd "$(dirname "$0")/../.."
 source repro/common/python_env.sh
 MAIN_LOG="repro/logs/phase6_single.log"
 mkdir -p repro/logs

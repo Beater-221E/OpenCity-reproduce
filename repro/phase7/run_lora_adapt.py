@@ -15,7 +15,7 @@ LOG_DIR = ROOT / "repro" / "results" / "phase7" / "logs"
 RESULT_DIR = ROOT / "repro" / "results" / "phase7"
 
 sys.path.insert(0, str(ROOT / "repro" / "common"))
-from parse_log import parse_test_metrics
+from parse_log import parse_actual_dataset, parse_test_metrics
 from run_logger import RunLogger, log_subprocess_run
 
 _RUN_LOGGER: RunLogger | None = None
@@ -201,7 +201,10 @@ def run_all(cfg: dict, gpu_id: int | None):
         zs = load_zeroshot_mae(cfg, vname, ds)
         vc = variant_from_name(cfg, vname)
         rc, log, wall, gpu = run_lora_job(ds, vc, rank, epochs, gpu_id)
-        m = parse_test_metrics(log)
+        actual = parse_actual_dataset(log)
+        m = parse_test_metrics(log) if actual == ds else None
+        if actual != ds:
+            logger().error(f"dataset mismatch expected={ds} actual={actual} log={log}")
         tp = parse_trainable_params(log)
 
         if rc == 0 and m:

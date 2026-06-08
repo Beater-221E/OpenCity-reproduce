@@ -11,7 +11,7 @@ OpenCity pre-trains on large-scale heterogeneous traffic data and supports zero-
 ## Requirements
 
 - Python 3.9+
-- PyTorch with CUDA (match your GPU driver)
+- PyTorch with CUDA for full GPU experiments (CPU inference is supported but slow)
 - Linux or WSL recommended for shell scripts
 
 ```bash
@@ -39,6 +39,12 @@ Unzip archives and generate CAD subsets:
 bash repro/setup_data.sh
 ```
 
+CAD subset generation can be slow because it processes large HDF5 files. To prepare the non-CAD datasets only, run:
+
+```bash
+OPENCITY_SKIP_CAD=1 bash repro/setup_data.sh
+```
+
 ### 2. Checkpoints
 
 Place official weights in `model_weights/OpenCity/`:
@@ -55,13 +61,14 @@ Download: [HuggingFace OpenCity-Plus](https://huggingface.co/hkuds/OpenCity-Plus
 
 ## Run
 
-All `python Run.py` commands **must run from `model/`** (paths are relative to that directory).
+All `python Run.py` commands **must run from `model/`** (paths are relative to that directory). For single-dataset runs, set `OPENCITY_DATASET_USE` instead of editing the shared config file.
 
 ### Smoke test (T3)
 
-Set one dataset in `conf/general_conf/pretrain.conf`, e.g. `dataset_use = ['PEMS07M']`, then:
+Set one dataset with `OPENCITY_DATASET_USE`, e.g.:
 
 ```bash
+export OPENCITY_DATASET_USE=PEMS07M
 bash repro/test_zeroshot.sh
 # Expected PEMS07M MAE ~ 4.50
 ```
@@ -78,6 +85,7 @@ Runs resumable zero-shot eval, baseline training, and writes CSV results to `rep
 
 ```bash
 cd model
+export OPENCITY_DATASET_USE=PEMS07M
 
 # Zero-shot test (T5)
 python Run.py -mode test -model OpenCity \
@@ -182,7 +190,7 @@ Single-job LoRA (CD_DIDI, rank=8):
 
 ```bash
 cd model
-set OPENCITY_DATASET_USE=CD_DIDI   # Linux/macOS: export OPENCITY_DATASET_USE=CD_DIDI
+export OPENCITY_DATASET_USE=CD_DIDI
 python Run.py -mode lora_eval -model OpenCity -load_pretrain_path OpenCity-plus.pth \
   -batch_size 2 -epochs 3 --embed_dim 512 --skip_dim 512 --enc_depth 6 --lora_rank 8
 ```

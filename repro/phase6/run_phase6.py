@@ -16,7 +16,7 @@ LOG_DIR = ROOT / "repro" / "results" / "phase6" / "logs"
 RESULT_DIR = ROOT / "repro" / "results" / "phase6"
 
 sys.path.insert(0, str(ROOT / "repro" / "common"))
-from parse_log import parse_test_metrics, parse_total_params
+from parse_log import parse_actual_dataset, parse_test_metrics, parse_total_params
 from patch_pretrain_conf import restore, set_dataset_use
 from run_logger import RunLogger, log_subprocess_run
 
@@ -175,6 +175,14 @@ def filter_datasets(names: list[str], gpu_id: int | None, explicit: list | None)
     return [d for d in names if shard_by_name(d, gpu_id)]
 
 
+def metrics_if_dataset_matches(log_path: Path, expected: str) -> dict | None:
+    actual = parse_actual_dataset(log_path)
+    if actual != expected:
+        logger().error(f"dataset mismatch expected={expected} actual={actual} log={log_path}")
+        return None
+    return parse_test_metrics(log_path)
+
+
 def run_zero_shot_batch(cfg: dict, datasets: list[str], out_csv: Path, group: str, gpu_id: int | None):
     fields = ["group", "variant", "dataset", "mae", "rmse", "mape", "wall_s", "gpu_mb", "status"]
     done = load_done(out_csv, ["group", "variant", "dataset"])
@@ -191,7 +199,7 @@ def run_zero_shot_batch(cfg: dict, datasets: list[str], out_csv: Path, group: st
             })
             continue
         rc, log, wall, gpu = run_runpy("test", ds, vc, gpu_id, log_tag=f"zs_{group}_{ds}_plus")
-        m = parse_test_metrics(log)
+        m = metrics_if_dataset_matches(log, ds)
         if rc == 0 and m:
             append_row(out_csv, fields, {
                 "group": group, "variant": "plus", "dataset": ds, **m,
@@ -209,8 +217,12 @@ def run_zero_shot_batch(cfg: dict, datasets: list[str], out_csv: Path, group: st
 
 def run_zero_shot_all(cfg: dict, gpu_id: int | None):
     suf = csv_suffix(gpu_id)
-    t1_list = cfg.get(f"table1_gpu{gpu_id}", cfg["table1_datasets"]) if gpu_id is not None else cfg["table1_datasets"]
-    t2_list = cfg.get(f"table2_gpu{gpu_id}", cfg["table2_supervised_datasets"]) if gpu_id is not None else cfg["table2_supervised_datasets"]
+    if gpu_id is None:
+        t1_list = cfg["table1_datasets"]
+        t2_list = cfg["table2_supervised_datasets"]
+    else:
+        t1_list = cfg.get(f"table1_gpu{gpu_id}", shard_list(cfg["table1_datasets"], gpu_id))
+        t2_list = cfg.get(f"table2_gpu{gpu_id}", shard_list(cfg["table2_supervised_datasets"], gpu_id))
     run_zero_shot_batch(cfg, t1_list, RESULT_DIR / f"zero_shot_table1{suf}.csv", "table1", gpu_id)
     all_ds = filter_datasets(scan_all_datasets(), gpu_id, None)
     run_zero_shot_batch(cfg, all_ds, RESULT_DIR / f"zero_shot_all{suf}.csv", "extended", gpu_id)
@@ -236,11 +248,11 @@ def run_fast_adapt_full(cfg: dict, gpu_id: int | None):
             if not dataset_exists(ds):
                 continue
             rc, log_z, _, _ = run_runpy("test", ds, vc, gpu_id, log_tag=f"ft_zs_{vname}_{ds}")
-            mz = parse_test_metrics(log_z)
+            mz = metrics_if_dataset_matches(log_z, ds)
             zs = float(mz["mae"]) if mz else None
             extra = ["-epochs", str(epochs), "--epochs", str(epochs)]
             rc2, log_f, wall, gpu = run_runpy("eval", ds, vc, gpu_id, extra, log_tag=f"ft_eval_{vname}_{ds}")
-            mf = parse_test_metrics(log_f)
+            mf = metrics_if_dataset_matches(log_f, ds)
             if rc == 0 and rc2 == 0 and mz and mf:
                 imp = round((zs - float(mf["mae"])) / zs * 100, 2) if zs else 0
                 append_row(out, fields, {
@@ -271,7 +283,7 @@ def run_scaling_matrix(cfg: dict, gpu_id: int | None):
             continue
         vc = variant_from_name(cfg, vname)
         rc, log, wall, gpu = run_runpy("test", ds, vc, gpu_id, log_tag=f"scale_{vname}_{ds}")
-        m = parse_test_metrics(log)
+        m = metrics_if_dataset_matches(log, ds)
         params = parse_total_params(log)
         pm = round(params / 1e6, 2) if params else ""
         if rc == 0 and m:

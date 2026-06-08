@@ -13,7 +13,7 @@ CONF = ROOT / "repro" / "phase6" / "configs.yaml"
 LOG_DIR = ROOT / "repro" / "results" / "phase6" / "logs"
 
 sys.path.insert(0, str(ROOT / "repro" / "common"))
-from parse_log import parse_test_metrics
+from parse_log import parse_actual_dataset, parse_test_metrics
 from patch_pretrain_conf import restore, set_dataset_use
 from run_logger import RunLogger, log_subprocess_run
 
@@ -33,6 +33,7 @@ def run_one(ds: str, ablation: str, gpu_id: int, log: RunLogger) -> dict:
     detail = LOG_DIR / f"abl_{ablation}_{ds}_g{gpu_id}.log"
     env = os.environ.copy()
     env["OPENCITY_ABLATION"] = ablation
+    env["OPENCITY_DATASET_USE"] = ds
     env["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
     env["PYTHONPATH"] = str(ROOT) + os.pathsep + env.get("PYTHONPATH", "")
     wrapper = ROOT / "repro" / "ablation" / "run_test_wrapped.py"
@@ -44,7 +45,10 @@ def run_one(ds: str, ablation: str, gpu_id: int, log: RunLogger) -> dict:
     ]
     job = f"ablation_{ablation}_{ds}"
     rc, _ = log_subprocess_run(log, cmd, MODEL_DIR, env, detail, job)
-    m = parse_test_metrics(detail)
+    actual = parse_actual_dataset(detail)
+    m = parse_test_metrics(detail) if actual == ds else None
+    if actual != ds:
+        log.error(f"dataset mismatch expected={ds} actual={actual} log={detail}")
     return {
         "dataset": ds, "ablation": ablation,
         "mae": m["mae"] if m else "", "rmse": m["rmse"] if m else "", "mape": m["mape"] if m else "",

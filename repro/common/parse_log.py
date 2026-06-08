@@ -9,6 +9,8 @@ RE_METRICS = re.compile(
     r"Average Horizon, MAE:\s*([\d.]+),\s*RMSE:\s*([\d.]+),\s*MAPE:\s*([\d.]+)%"
 )
 RE_PARAMS = re.compile(r"Total params num:\s*(\d+)")
+RE_DATASET_USE = re.compile(r"dataset_use\s*:\s*\['([^']+)'\]")
+RE_LOAD_DATASET = re.compile(r"Load\s+([A-Za-z0-9_-]+)\s+Dataset shaped:")
 
 
 def parse_train_losses(log_path: Path) -> list[tuple[int, float]]:
@@ -44,3 +46,17 @@ def parse_total_params(log_path: Path) -> int | None:
     if not matches:
         return None
     return int(matches[-1].group(1))
+
+
+def parse_actual_dataset(log_path: Path) -> str | None:
+    """Return the dataset Run.py actually reported loading."""
+    if not log_path.exists():
+        return None
+    text = log_path.read_text(errors="replace")
+    matches = list(RE_LOAD_DATASET.finditer(text))
+    if matches:
+        return matches[-1].group(1)
+    matches = list(RE_DATASET_USE.finditer(text))
+    if matches:
+        return matches[-1].group(1)
+    return None

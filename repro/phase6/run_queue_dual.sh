@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Dual-GPU queue with full logging.
 set -euo pipefail
-ROOT="/home/OpenCity"
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 # shellcheck source=/dev/null
 source repro/common/python_env.sh

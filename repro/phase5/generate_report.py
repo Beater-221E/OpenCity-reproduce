@@ -38,12 +38,15 @@ def write_table1(cfg):
     lines.append("| Dataset | MAE | RMSE | MAPE | Paper MAE | Err% | Status |\n")
     lines.append("|---------|-----|------|------|-----------|------|--------|\n")
     for ds in cfg.get("table1_datasets", []):
-        row = next((r for r in t1 if r.get("dataset") == ds and r.get("status") == "ok"), None)
+        row = next((r for r in t1 if r.get("dataset") == ds), None)
         pref = paper.get(ds, {})
         pm = pref.get("mae", "-")
-        if row:
+        if row and row.get("status") == "ok":
             err = pct_err(row["mae"], pm) if pm != "-" else "-"
             lines.append(f"| {ds} | {row['mae']} | {row['rmse']} | {row['mape']}% | {pm} | {err} | ok |\n")
+        elif row:
+            status = row.get("status") or "pending"
+            lines.append(f"| {ds} | - | - | - | {pm} | - | {status} |\n")
         else:
             lines.append(f"| {ds} | - | - | - | {pm} | - | pending |\n")
     (TABLES / "paper_table1_opencity.md").write_text("".join(lines))

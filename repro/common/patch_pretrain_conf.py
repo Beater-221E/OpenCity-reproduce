@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Patch dataset_use in per-GPU pretrain conf copies (avoids dual-GPU races)."""
+"""Patch dataset_use in config files.
+
+For GPU-specific workers, this intentionally avoids copying back to the shared
+pretrain.conf. Run.py should receive OPENCITY_DATASET_USE in its environment.
+"""
 import re
 import shutil
 from pathlib import Path
@@ -38,7 +42,8 @@ def set_dataset_use(datasets: list[str], gpu_id: int | None = None):
     else:
         text = repl + "\n" + text
     src.write_text(text)
-    shutil.copy2(src, ACTIVE_CONF)
+    if gpu_id is None:
+        shutil.copy2(src, ACTIVE_CONF)
 
 
 def restore():

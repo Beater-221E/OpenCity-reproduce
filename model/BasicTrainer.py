@@ -179,9 +179,9 @@ class Trainer(object):
     def test(model, args, scaler_dict, test_dataloader, logger, path=None):
         if path != None:
             if torch.cuda.device_count() > 1:
-                model.load_state_dict(torch.load(path))
+                model.load_state_dict(torch.load(path, map_location=args.device))
             else:
-                model_weights = {k.replace('module.', ''): v for k, v in torch.load(path).items()}
+                model_weights = {k.replace('module.', ''): v for k, v in torch.load(path, map_location=args.device).items()}
                 model.load_state_dict(model_weights)
             model.to(args.device)
         model.eval()
